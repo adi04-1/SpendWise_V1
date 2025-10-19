@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { AddMonthDialog } from "@/components/AddMonthDialog";
 
 interface MonthlyOverviewPageProps {
   year: number;
@@ -75,7 +76,7 @@ export function MonthlyOverviewPage({
             </p>
           </div>
           <Button
-            onClick={() => setShowAddMonth(!showAddMonth)}
+            onClick={() => setShowAddMonth(true)}
             data-testid="button-add-month"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -106,6 +107,13 @@ export function MonthlyOverviewPage({
           </div>
         )}
       </main>
+
+      <AddMonthDialog
+        open={showAddMonth}
+        onOpenChange={setShowAddMonth}
+        yearId={yearId}
+        year={year}
+      />
     </div>
   );
 }

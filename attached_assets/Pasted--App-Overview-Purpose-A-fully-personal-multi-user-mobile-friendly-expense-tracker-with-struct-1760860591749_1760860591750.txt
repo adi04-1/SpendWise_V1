@@ -1,0 +1,78 @@
+🌟 App Overview
+Purpose:
+A fully personal, multi-user, mobile-friendly expense tracker with structured relational data, dynamic monthly/yearly summaries, analytics, and customizable presets. Supports multiple users, budget tracking, category/subcategory breakdown, payment modes, and “MadeFor” attribution (Personal / Shared / Amma).
+
+Modules Overview
+Module	Purpose	Key Features	Data Tables
+1. User Login / Selection	User login, add/edit users, admin override	Avatar-based login, horizontal scroll of users, Admin fixed, last active auto-login	Users
+2. User Home & Year Overview	Overview of all years and preset shortcuts	Year tiles with total spent, months active, quick stats; Presets tile	Years, Users
+3. Yearly Expense Overview	Show monthly summaries for a selected year	Month cards, totals, top categories, progress bars, quick add/edit month	Months, Years, linked to Users
+4.1 Monthly Expense Template	Define categories/subcategories to track for a month	Select month, categories, subcategories; reusable templates	ExpenseMonthTemplate, TemplateCategoryMapping, TemplateSubCategoryMapping
+4.2 Enter Expense Details	Log individual expenses	Form with category, subcategory, amount, date/time, payment mode, MadeFor attribution, budget exclusion	MonthlyExpenses, linked to template and presets
+4.3 Month Expense Overview / Edit	Review & analyze all expenses for a month	List view, charts, analytics panel, edit/add expenses, visual feedback, color-coded budgets	MonthlyExpenses, linked to template & month summary
+5. Presets Configuration	Manage all reusable data for the app	Categories, subcategories, payment modes, MadeFor entities; inline addition in forms	ExpenseCategory, ExpenseSubCategory, ExpenseMode, ExpenseMadeFor
+
+Key Features Across Modules
+	• Multi-user support with roles: Admin (SuperUser), Primary User (Adi), other users.
+	• Relational table structure with IDs, timestamps, and foreign key relationships.
+	• Budget tracking: Monthly and yearly totals, overspend alerts, progress bars.
+	• Analytics & insights: Category/subcategory breakdown, MadeFor analysis, payment mode distribution, top expenses.
+	• Reusable templates for monthly categories/subcategories.
+	• Dynamic UI / UX:
+		○ Horizontal scrollable avatars, highlighted active user.
+		○ Cards for years and months.
+		○ Inline forms and collapsible panels.
+		○ Color coding for budgets and categories.
+	• Automation:
+		○ Auto-calculation of totals and splits.
+		○ Auto-update last logged-on, login count.
+		○ Optional symbol-based MadeFor assignment (@, *).
+	• Mobile-friendly and interactive for personal use.
+
+Data Flow
+	1. User selects login → Active user stored (varCurrentUser).
+	2. Home / Year Overview → Shows all years for user; Presets accessible.
+	3. Select Year → Monthly cards displayed (Module 3).
+	4. Add/Edit Month → Template (4.1) first, then expenses (4.2).
+	5. Add/Edit Expenses → Updates month summary & analytics dynamically (4.3).
+	6. Presets → Drive all dropdowns and dynamic forms (Module 5).
+
+Have You Missed Anything Important?
+From the full scope, here are a few necessary things you might consider adding or confirming:
+	1. User Authentication Security (even for personal use):
+		○ Simple password/PIN for each user or at least optional.
+	2. Data Backup / Export:
+		○ Ability to export all expenses to Excel / CSV for offline backup.
+	3. Reporting:
+		○ Yearly or monthly summary reports in PDF / chart form.
+	4. Multi-Currency Support (optional):
+		○ If you ever want to log expenses in different currencies.
+	5. Shared Expenses Splits:
+		○ Currently “Shared” is handled — confirm if proportional splits or just equal.
+	6. Notifications / Alerts:
+		○ Overspending, budget reached alerts (optional, for mobile).
+	7. Performance for Large Data:
+		○ With Excel/Sheets backend, may need aggregation for faster dashboards.
+
+✅ Overall Assessment:
+Your app design is very complete and well-structured, with all essential modules covered. Module 5 (Presets) fills in the last missing piece for dynamic form data. The only additions that could enhance it further are backup/export, optional authentication, reporting, and alerts.
+
+Additional requirements: 
+Few things which needs to be kept In mind are;
+
+After login, in settings button we need to modify the details of the user and even delete the user account
+
+Add working functionality for Add New year, Add New month with the required fields
+
+In the monthly spends tab show the following insights -> Total Spent, Spend by category, Spend by MadeFor
+
+Also in monthly view add a shared expenses UI, where we can view the shared expenses alone and mark them as paid.
+Eg-> I make an expense log in data entry for 2000 and specify it as shared, then in home after clicking on shared expenses I need to view the shared expense. In that I need to have the necessary details along with new columns like shared with (which includes separate names), Amount to be split(total), split for person, paid status induvidually.
+So in shared expenses-> I should be able to enter for the 2000 spend, The names of share ( kamalesh, Kathick, Sangeeth, etc..), total amount to be split as 2000, split share as 4 (since there are 4 including me), and app should generate automatically the 4 separate spend like a subspend in the share with each share visible there and add a mark as paid status
+
+Admin Role should be able to view Data, Users, Edit Colours in home page
+In Data, Admin should be able to view all table data present in every table associated with the app. ( use the best way to achieve this). May use pagination or separate view for tables and Admin may even need to edit the data
+
+In User, Admin should be able to View the User details, add, edit and remove them.
+
+In Edit Colours, Admin should be able to edit all colours involved in the App (Eg; Spends, monthly colours etc..) 

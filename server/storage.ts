@@ -33,6 +33,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
   updateUserLastLogin(id: string): Promise<void>;
 
   // Category operations
@@ -87,6 +89,11 @@ export interface IStorage {
   // Analytics operations
   getMonthTotalSpent(monthId: string): Promise<number>;
   getYearTotalSpent(yearId: string): Promise<number>;
+
+  // Admin operations
+  getTableData(tableName: string, limit: number, offset: number): Promise<any[]>;
+  getAllColors(): Promise<any[]>;
+  updateColor(id: string, colorValue: string): Promise<any>;
 }
 
 export class DbStorage implements IStorage {
@@ -118,6 +125,19 @@ export class DbStorage implements IStorage {
       .update(users)
       .set({ lastLoggedOn: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async updateUser(id: string, data: Partial<InsertUser>): Promise<User> {
+    const result = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Category operations
@@ -370,6 +390,42 @@ export class DbStorage implements IStorage {
       );
 
     return parseFloat(result[0]?.total || "0");
+  }
+
+  // Admin operations
+  async getTableData(tableName: string, limit: number, offset: number): Promise<any[]> {
+    const tableMap: Record<string, any> = {
+      users,
+      years,
+      months,
+      expenses,
+      expense_categories: expenseCategories,
+      expense_subcategories: expenseSubcategories,
+      payment_modes: paymentModes,
+      made_for_entities: madeForEntities,
+    };
+
+    const table = tableMap[tableName];
+    if (!table) {
+      throw new Error(`Table ${tableName} not found`);
+    }
+
+    return await db.select().from(table).limit(limit).offset(offset);
+  }
+
+  async getAllColors(): Promise<any[]> {
+    const { appColors } = await import("@shared/schema");
+    return await db.select().from(appColors);
+  }
+
+  async updateColor(id: string, colorValue: string): Promise<any> {
+    const { appColors } = await import("@shared/schema");
+    const result = await db
+      .update(appColors)
+      .set({ colorValue, updatedOn: new Date() })
+      .where(eq(appColors.id, id))
+      .returning();
+    return result[0];
   }
 }
 

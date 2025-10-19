@@ -14,8 +14,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
-export function AddUserDialog() {
-  const [open, setOpen] = useState(false);
+interface AddUserDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function AddUserDialog({ open: controlledOpen, onOpenChange: controlledOnOpenChange }: AddUserDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [formData, setFormData] = useState({
     username: "",
     mobileNumber: "",

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { YearCard } from "@/components/YearCard";
 import { Card } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Settings, Plus, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { AddYearDialog } from "@/components/AddYearDialog";
 
 interface YearOverviewPageProps {
   userName: string;
@@ -29,6 +31,8 @@ export function YearOverviewPage({
   onPresetsClick,
   onLogout,
 }: YearOverviewPageProps) {
+  const [showAddYear, setShowAddYear] = useState(false);
+
   const { data: yearsData = [], isLoading } = useQuery<YearData[]>({
     queryKey: ["/api/users", userId, "years"],
   });
@@ -108,7 +112,7 @@ export function YearOverviewPage({
 
             <div className="mt-8 flex gap-4">
               <Button
-                onClick={() => console.log("Add new year")}
+                onClick={() => setShowAddYear(true)}
                 variant="outline"
                 data-testid="button-add-year"
               >
@@ -123,6 +127,12 @@ export function YearOverviewPage({
           </>
         )}
       </main>
+
+      <AddYearDialog
+        open={showAddYear}
+        onOpenChange={setShowAddYear}
+        userId={userId}
+      />
     </div>
   );
 }

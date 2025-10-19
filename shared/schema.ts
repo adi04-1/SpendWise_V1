@@ -186,3 +186,42 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({
 
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Expense = typeof expenses.$inferSelect;
+
+// Shared Expense Splits - for tracking expense splitting among multiple people
+export const expenseSplits = pgTable("expense_splits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  expenseId: varchar("expense_id")
+    .notNull()
+    .references(() => expenses.id, { onDelete: "cascade" }),
+  personName: text("person_name").notNull(),
+  splitAmount: decimal("split_amount", { precision: 12, scale: 2 }).notNull(),
+  isPaid: boolean("is_paid").notNull().default(false),
+  createdOn: timestamp("created_on").notNull().defaultNow(),
+  updatedOn: timestamp("updated_on").notNull().defaultNow(),
+});
+
+export const insertExpenseSplitSchema = createInsertSchema(expenseSplits).omit({
+  id: true,
+  createdOn: true,
+  updatedOn: true,
+});
+
+export type InsertExpenseSplit = z.infer<typeof insertExpenseSplitSchema>;
+export type ExpenseSplit = typeof expenseSplits.$inferSelect;
+
+// App Colors - for admin customization
+export const appColors = pgTable("app_colors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  colorKey: text("color_key").notNull().unique(), // e.g., 'category-shopping', 'budget-success'
+  colorValue: text("color_value").notNull(), // HSL color value
+  description: text("description"), // What this color is used for
+  updatedOn: timestamp("updated_on").notNull().defaultNow(),
+});
+
+export const insertAppColorSchema = createInsertSchema(appColors).omit({
+  id: true,
+  updatedOn: true,
+});
+
+export type InsertAppColor = z.infer<typeof insertAppColorSchema>;
+export type AppColor = typeof appColors.$inferSelect;

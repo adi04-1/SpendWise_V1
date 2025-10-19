@@ -55,6 +55,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.updateUser(req.params.id, req.body);
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // ============= CATEGORY ROUTES =============
   app.get("/api/categories", async (req, res) => {
     try {
@@ -476,6 +494,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ totalSpent });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // ============= ADMIN ROUTES =============
+  app.get("/api/admin/table/:tableName", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = 20;
+      const offset = (page - 1) * limit;
+      
+      const data = await storage.getTableData(tableName, limit, offset);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch table data" });
+    }
+  });
+
+  app.get("/api/admin/colors", async (req, res) => {
+    try {
+      const colors = await storage.getAllColors();
+      res.json(colors);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch colors" });
+    }
+  });
+
+  app.patch("/api/admin/colors/:id", async (req, res) => {
+    try {
+      const color = await storage.updateColor(req.params.id, req.body.colorValue);
+      res.json(color);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update color" });
     }
   });
 
