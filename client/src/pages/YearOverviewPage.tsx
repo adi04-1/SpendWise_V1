@@ -3,16 +3,19 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { YearCard } from "@/components/YearCard";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, Plus, BarChart3 } from "lucide-react";
+import { Settings, Plus, BarChart3, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { AddYearDialog } from "@/components/AddYearDialog";
+import { UserSettingsDialog } from "@/components/UserSettingsDialog";
 
 interface YearOverviewPageProps {
   userName: string;
   userId: string;
+  userRole: string;
   onYearSelect: (year: number, yearId: string) => void;
   onPresetsClick: () => void;
+  onAdminPanelClick: () => void;
   onLogout: () => void;
 }
 
@@ -27,11 +30,14 @@ interface YearData {
 export function YearOverviewPage({
   userName,
   userId,
+  userRole,
   onYearSelect,
   onPresetsClick,
+  onAdminPanelClick,
   onLogout,
 }: YearOverviewPageProps) {
   const [showAddYear, setShowAddYear] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { data: yearsData = [], isLoading } = useQuery<YearData[]>({
     queryKey: ["/api/users", userId, "years"],
@@ -57,7 +63,12 @@ export function YearOverviewPage({
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowSettings(true)}
+                data-testid="button-settings"
+              >
                 <Settings className="h-5 w-5" />
               </Button>
             </div>
@@ -108,6 +119,26 @@ export function YearOverviewPage({
                   </div>
                 </div>
               </Card>
+
+              {(userRole === "admin" || userRole === "superadmin") && (
+                <Card
+                  className="p-6 hover-elevate active-elevate-2 cursor-pointer transition-all border-dashed border-primary/50"
+                  onClick={onAdminPanelClick}
+                  data-testid="card-admin-panel"
+                >
+                  <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Shield className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-1">Admin Panel</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Manage data, users & colors
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
             </div>
 
             <div className="mt-8 flex gap-4">
@@ -132,6 +163,13 @@ export function YearOverviewPage({
         open={showAddYear}
         onOpenChange={setShowAddYear}
         userId={userId}
+      />
+      
+      <UserSettingsDialog
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        userId={userId}
+        onAccountDeleted={onLogout}
       />
     </div>
   );

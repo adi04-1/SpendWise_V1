@@ -9,7 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 interface UserLoginPageProps {
-  onUserSelect: (userId: string, userName: string) => void;
+  onUserSelect: (userId: string, userName: string, userRole: string) => void;
 }
 
 export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
@@ -29,11 +29,11 @@ export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
     },
   });
 
-  const handleSelectUser = async (userId: string, userName: string) => {
+  const handleSelectUser = async (userId: string, userName: string, userRole: string) => {
     setSelectedUser(userId);
     await loginMutation.mutateAsync(userId);
     setTimeout(() => {
-      onUserSelect(userId, userName);
+      onUserSelect(userId, userName, userRole);
     }, 300);
   };
 
@@ -64,7 +64,7 @@ export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
             <AddUserDialog />
 
             {users
-              .filter((user) => user.role !== "admin")
+              .filter((user) => user.role !== "admin" && user.role !== "superadmin")
               .map((user) => (
                 <div
                   key={user.id}
@@ -80,7 +80,7 @@ export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
                   <div className="text-center">
                     <p className="font-medium mb-2">{user.firstName}</p>
                     <Button
-                      onClick={() => handleSelectUser(user.id, user.firstName)}
+                      onClick={() => handleSelectUser(user.id, user.firstName, user.role)}
                       size="sm"
                       data-testid={`button-select-${user.firstName.toLowerCase()}`}
                     >
@@ -91,7 +91,7 @@ export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
               ))}
 
             {users
-              .filter((user) => user.role === "admin")
+              .filter((user) => user.role === "admin" || user.role === "superadmin")
               .map((admin) => (
                 <div
                   key={admin.id}
@@ -102,10 +102,10 @@ export function UserLoginPage({ onUserSelect }: UserLoginPageProps) {
                     <Shield className="h-10 w-10" />
                   </div>
                   <div className="text-center">
-                    <p className="font-medium mb-2">Admin</p>
+                    <p className="font-medium mb-2">{admin.role === "superadmin" ? "SuperAdmin" : "Admin"}</p>
                     <Button
                       onClick={() =>
-                        handleSelectUser(admin.id, admin.firstName)
+                        handleSelectUser(admin.id, admin.firstName, admin.role)
                       }
                       size="sm"
                       variant="destructive"

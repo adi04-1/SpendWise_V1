@@ -66,6 +66,14 @@ export function MonthExpenseDetailPage({
     queryKey: ["/api/presets"],
   });
 
+  const { data: insights } = useQuery<{
+    totalSpent: number;
+    byCategory: Array<{ categoryId: string; categoryName: string; amount: number }>;
+    byMadeFor: Array<{ madeForId: string; madeForName: string; amount: number }>;
+  }>({
+    queryKey: ["/api/months", monthId, "insights"],
+  });
+
   const isLoading = isLoadingMonth || isLoadingExpenses || isLoadingPresets;
 
   const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -215,6 +223,44 @@ export function MonthExpenseDetailPage({
             )}
           </Card>
         </div>
+
+        {insights && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Spend by Category</h3>
+              <div className="space-y-3">
+                {insights.byCategory.map((item) => (
+                  <div key={item.categoryId} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{item.categoryName}</span>
+                    <span className="text-sm font-mono text-muted-foreground">
+                      ₹{item.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+                {insights.byCategory.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No category data available</p>
+                )}
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Spend by Made For</h3>
+              <div className="space-y-3">
+                {insights.byMadeFor.map((item) => (
+                  <div key={item.madeForId} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{item.madeForName}</span>
+                    <span className="text-sm font-mono text-muted-foreground">
+                      ₹{item.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+                {insights.byMadeFor.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No data available</p>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
 
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">Expense List</h2>

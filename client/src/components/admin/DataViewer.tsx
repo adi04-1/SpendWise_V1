@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -17,7 +17,19 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 const TABLES = [
   { value: "users", label: "Users" },
@@ -37,6 +49,9 @@ const ITEMS_PER_PAGE = 20;
 export function DataViewer() {
   const [selectedTable, setSelectedTable] = useState<string>("users");
   const [page, setPage] = useState(1);
+  const [editingRow, setEditingRow] = useState<any | null>(null);
+  const [editFormData, setEditFormData] = useState<Record<string, any>>({});
+  const { toast } = useToast();
 
   const { data, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/table", selectedTable, page],
@@ -49,6 +64,43 @@ export function DataViewer() {
   const handleTableChange = (value: string) => {
     setSelectedTable(value);
     setPage(1);
+  };
+
+  const handleEditClick = (row: any) => {
+    setEditingRow(row);
+    setEditFormData({ ...row });
+  };
+
+  const updateRowMutation = useMutation({
+    mutationFn: async (data: { table: string; id: string; updates: Record<string, any> }) => {
+      return apiRequest("PATCH", `/api/admin/table/${data.table}/${data.id}`, data.updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/table", selectedTable, page] });
+      toast({
+        title: "Data updated",
+        description: "The record has been updated successfully.",
+      });
+      setEditingRow(null);
+      setEditFormData({});
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update data. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveEdit = () => {
+    if (editingRow && editingRow.id) {
+      updateRowMutation.mutate({
+        table: selectedTable,
+        id: editingRow.id,
+        updates: editFormData,
+      });
+    }
   };
 
   return (
@@ -115,6 +167,7 @@ export function DataViewer() {
                   {columns.map((column) => (
                     <TableHead key={column}>{column}</TableHead>
                   ))}
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,6 +178,17 @@ export function DataViewer() {
                         {String(row[column] ?? "")}
                       </TableCell>
                     ))}
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(row)}
+                        disabled={!row.id}
+                        data-testid={`button-edit-row-${index}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -132,6 +196,39 @@ export function DataViewer() {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={!!editingRow} onOpenChange={(open) => !open && setEditingRow(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Record</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {editingRow && Object.keys(editingRow).map((key) => (
+              <div key={key} className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor={`edit-${key}`} className="text-right">
+                  {key}
+                </Label>
+                <Input
+                  id={`edit-${key}`}
+                  value={editFormData[key] ?? ""}
+                  onChange={(e) => setEditFormData({ ...editFormData, [key]: e.target.value })}
+                  className="col-span-3"
+                  disabled={key === "id" || key === "createdOn"}
+                  data-testid={`input-edit-${key}`}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingRow(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={updateRowMutation.isPending}>
+              {updateRowMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

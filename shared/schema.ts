@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   firstName: text("first_name").notNull(),
   shortName: text("short_name"),
-  role: text("role").notNull().default("standard"), // 'admin' | 'standard'
+  role: text("role").notNull().default("standard"), // 'superadmin' | 'admin' | 'standard'
   createdOn: timestamp("created_on").notNull().defaultNow(),
   lastLoggedOn: timestamp("last_logged_on"),
 });

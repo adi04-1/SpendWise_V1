@@ -35,7 +35,7 @@ const editUserSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   shortName: z.string().optional(),
   mobileNumber: z.string().optional(),
-  role: z.enum(["admin", "standard"]),
+  role: z.enum(["superadmin", "admin", "standard"]),
 });
 
 type EditUserFormData = z.infer<typeof editUserSchema>;
@@ -71,7 +71,7 @@ export function EditUserDialog({
       firstName: user.firstName,
       shortName: user.shortName || "",
       mobileNumber: user.mobileNumber || "",
-      role: user.role as "admin" | "standard",
+      role: user.role as "superadmin" | "admin" | "standard",
     },
   });
 
@@ -192,6 +192,7 @@ export function EditUserDialog({
                     <SelectContent>
                       <SelectItem value="standard">Standard</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="superadmin">SuperAdmin</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

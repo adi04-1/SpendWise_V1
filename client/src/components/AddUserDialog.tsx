@@ -9,6 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -135,6 +142,22 @@ export function AddUserDialog({ open: controlledOpen, onOpenChange: controlledOn
               maxLength={2}
               data-testid="input-shortname"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select 
+              value={formData.role} 
+              onValueChange={(value) => setFormData({ ...formData, role: value })}
+            >
+              <SelectTrigger id="role" data-testid="select-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="superadmin">SuperAdmin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">

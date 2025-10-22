@@ -89,9 +89,15 @@ export interface IStorage {
   // Analytics operations
   getMonthTotalSpent(monthId: string): Promise<number>;
   getYearTotalSpent(yearId: string): Promise<number>;
+  getMonthInsights(monthId: string): Promise<{
+    totalSpent: number;
+    byCategory: Array<{ categoryId: string; categoryName: string; amount: number }>;
+    byMadeFor: Array<{ madeForId: string; madeForName: string; amount: number }>;
+  }>;
 
   // Admin operations
   getTableData(tableName: string, limit: number, offset: number): Promise<any[]>;
+  updateTableRow(tableName: string, id: string, updates: Record<string, any>): Promise<any>;
   getAllColors(): Promise<any[]>;
   updateColor(id: string, colorValue: string): Promise<any>;
 }
@@ -392,6 +398,61 @@ export class DbStorage implements IStorage {
     return parseFloat(result[0]?.total || "0");
   }
 
+  async getMonthInsights(monthId: string): Promise<{
+    totalSpent: number;
+    byCategory: Array<{ categoryId: string; categoryName: string; amount: number }>;
+    byMadeFor: Array<{ madeForId: string; madeForName: string; amount: number }>;
+  }> {
+    const totalSpent = await this.getMonthTotalSpent(monthId);
+    
+    const expensesData = await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.monthId, monthId));
+
+    const categoryTotals: Record<string, number> = {};
+    const madeForTotals: Record<string, number> = {};
+
+    for (const expense of expensesData) {
+      if (!expense.excludeFromBudget) {
+        const amount = parseFloat(expense.amount);
+        categoryTotals[expense.categoryId] = (categoryTotals[expense.categoryId] || 0) + amount;
+        madeForTotals[expense.madeForId] = (madeForTotals[expense.madeForId] || 0) + amount;
+      }
+    }
+
+    const byCategory = await Promise.all(
+      Object.entries(categoryTotals).map(async ([categoryId, amount]) => {
+        const category = await this.getCategory(categoryId);
+        return {
+          categoryId,
+          categoryName: category?.name || "Unknown",
+          amount,
+        };
+      })
+    );
+
+    const byMadeFor = await Promise.all(
+      Object.entries(madeForTotals).map(async ([madeForId, amount]) => {
+        const madeForEntity = await db
+          .select()
+          .from(madeForEntities)
+          .where(eq(madeForEntities.id, madeForId));
+        return {
+          madeForId,
+          madeForName: madeForEntity[0]?.name || "Unknown",
+          amount,
+        };
+      })
+    );
+
+    return {
+      totalSpent,
+      byCategory: byCategory.sort((a, b) => b.amount - a.amount),
+      byMadeFor: byMadeFor.sort((a, b) => b.amount - a.amount),
+    };
+  }
+
   // Admin operations
   async getTableData(tableName: string, limit: number, offset: number): Promise<any[]> {
     const tableMap: Record<string, any> = {
@@ -411,6 +472,40 @@ export class DbStorage implements IStorage {
     }
 
     return await db.select().from(table).limit(limit).offset(offset);
+  }
+
+  async updateTableRow(tableName: string, id: string, updates: Record<string, any>): Promise<any> {
+    const tableMap: Record<string, any> = {
+      users,
+      years,
+      months,
+      expenses,
+      expense_categories: expenseCategories,
+      expense_subcategories: expenseSubcategories,
+      payment_modes: paymentModes,
+      made_for_entities: madeForEntities,
+    };
+
+    const table = tableMap[tableName];
+    if (!table) {
+      throw new Error(`Table ${tableName} not found`);
+    }
+
+    const filteredUpdates = { ...updates };
+    delete filteredUpdates.id;
+    delete filteredUpdates.createdOn;
+
+    if (filteredUpdates.updatedOn !== undefined) {
+      filteredUpdates.updatedOn = new Date();
+    }
+
+    const result = await db
+      .update(table)
+      .set(filteredUpdates)
+      .where(eq(table.id, id))
+      .returning();
+    
+    return result[0];
   }
 
   async getAllColors(): Promise<any[]> {

@@ -9,14 +9,16 @@ import { YearOverviewPage } from "@/pages/YearOverviewPage";
 import { MonthlyOverviewPage } from "@/pages/MonthlyOverviewPage";
 import { MonthExpenseDetailPage } from "@/pages/MonthExpenseDetailPage";
 import { PresetsPage } from "@/pages/PresetsPage";
+import { AdminPanel } from "@/pages/AdminPanel";
 
 type Screen =
   | { type: "login" }
-  | { type: "yearOverview"; userId: string; userName: string }
+  | { type: "yearOverview"; userId: string; userName: string; userRole: string }
   | {
       type: "monthlyOverview";
       userId: string;
       userName: string;
+      userRole: string;
       year: number;
       yearId: string;
     }
@@ -24,18 +26,20 @@ type Screen =
       type: "monthDetail";
       userId: string;
       userName: string;
+      userRole: string;
       year: number;
       yearId: string;
       month: string;
       monthId: string;
     }
-  | { type: "presets"; userId: string; userName: string };
+  | { type: "presets"; userId: string; userName: string; userRole: string }
+  | { type: "adminPanel"; userId: string; userName: string; userRole: string };
 
 function App() {
   const [screen, setScreen] = useState<Screen>({ type: "login" });
 
-  const handleUserSelect = (userId: string, userName: string) => {
-    setScreen({ type: "yearOverview", userId, userName });
+  const handleUserSelect = (userId: string, userName: string, userRole: string) => {
+    setScreen({ type: "yearOverview", userId, userName, userRole });
   };
 
   const handleYearSelect = (year: number, yearId: string) => {
@@ -44,6 +48,7 @@ function App() {
         type: "monthlyOverview",
         userId: screen.userId,
         userName: screen.userName,
+        userRole: screen.userRole,
         year,
         yearId,
       });
@@ -60,6 +65,7 @@ function App() {
         type: "monthDetail",
         userId: screen.userId,
         userName: screen.userName,
+        userRole: screen.userRole,
         year,
         yearId: screen.yearId,
         month,
@@ -74,16 +80,29 @@ function App() {
         type: "presets",
         userId: screen.userId,
         userName: screen.userName,
+        userRole: screen.userRole,
+      });
+    }
+  };
+
+  const handleAdminPanelClick = () => {
+    if (screen.type === "yearOverview") {
+      setScreen({
+        type: "adminPanel",
+        userId: screen.userId,
+        userName: screen.userName,
+        userRole: screen.userRole,
       });
     }
   };
 
   const handleBackToYears = () => {
-    if (screen.type === "monthlyOverview" || screen.type === "presets") {
+    if (screen.type === "monthlyOverview" || screen.type === "presets" || screen.type === "adminPanel") {
       setScreen({
         type: "yearOverview",
         userId: screen.userId,
         userName: screen.userName,
+        userRole: screen.userRole,
       });
     }
   };
@@ -94,6 +113,7 @@ function App() {
         type: "monthlyOverview",
         userId: screen.userId,
         userName: screen.userName,
+        userRole: screen.userRole,
         year: screen.year,
         yearId: screen.yearId,
       });
@@ -115,8 +135,10 @@ function App() {
             <YearOverviewPage
               userName={screen.userName}
               userId={screen.userId}
+              userRole={screen.userRole}
               onYearSelect={handleYearSelect}
               onPresetsClick={handlePresetsClick}
+              onAdminPanelClick={handleAdminPanelClick}
               onLogout={handleLogout}
             />
           )}
@@ -140,6 +162,9 @@ function App() {
           )}
           {screen.type === "presets" && (
             <PresetsPage userName={screen.userName} onBack={handleBackToYears} />
+          )}
+          {screen.type === "adminPanel" && (
+            <AdminPanel onBack={handleBackToYears} />
           )}
           <Toaster />
         </TooltipProvider>

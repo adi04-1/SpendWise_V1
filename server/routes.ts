@@ -497,6 +497,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/months/:monthId/insights", async (req, res) => {
+    try {
+      const insights = await storage.getMonthInsights(req.params.monthId);
+      res.json(insights);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch month insights" });
+    }
+  });
+
   // ============= ADMIN ROUTES =============
   app.get("/api/admin/table/:tableName", async (req, res) => {
     try {
@@ -527,6 +536,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(color);
     } catch (error) {
       res.status(400).json({ error: "Failed to update color" });
+    }
+  });
+
+  app.patch("/api/admin/table/:tableName/:id", async (req, res) => {
+    try {
+      const { tableName, id } = req.params;
+      const updates = req.body;
+      const result = await storage.updateTableRow(tableName, id, updates);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update table row" });
     }
   });
 
